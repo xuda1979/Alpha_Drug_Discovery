@@ -1,24 +1,32 @@
-# Script to run specific tasks like training models and predicting protein structures.
+# run.py
 
-from alpha_drug_discovery import model_training, drug_prediction
+from models import gan_drug_design, rl_drug_design, deep_docking
+from models import qm_mm_simulation, integrative_biomarker_discovery, ai_molecular_dynamics
+from repurposing import network_drug_repurposing, automated_synthesis, adversarial_toxicity, transfer_learning_toxicity
 
-def train_model():
-    # Example training code
-    X = ...  # Load or generate input features
-    y = ...  # Load or generate target values
-    model_training.train_genomic_model(X, y, epochs=10)
+def run_gan_drug_design():
+    X = ...  # Load or generate your input data
+    gan_drug_design.train_gan(X)
 
-def predict_drug_target():
-    # Example drug-target prediction code
-    X = ...  # Load or generate input features
-    y = ...  # Load or generate target values
-    drug_prediction.train_drug_target_model(X, y, epochs=10)
+def run_rl_drug_design():
+    env = ...  # Set up your environment
+    policy_network = rl_drug_design.PolicyNetwork(state_dim=..., action_dim=...)
+    rl_drug_design.train_policy_gradient(env, policy_network)
+
+def run_deep_docking():
+    X, y = ...  # Load your docking data
+    deep_docking.train_docking_model(X, y)
+
+# Add similar functions for other new components...
 
 if __name__ == "__main__":
-    task = input("Enter 'train' to train models or 'predict' to run drug-target prediction: ")
-    if task == 'train':
-        train_model()
-    elif task == 'predict':
-        predict_drug_target()
+    task = input("Enter a task: 'gan_design', 'rl_design', 'deep_docking', 'qm_mm', 'network_repurposing', 'synthesis', 'adversarial_toxicity', 'transfer_toxicity', 'integrative_biomarker', 'molecular_dynamics': ")
+    if task == 'gan_design':
+        run_gan_drug_design()
+    elif task == 'rl_design':
+        run_rl_drug_design()
+    elif task == 'deep_docking':
+        run_deep_docking()
+    # Add more task options as needed...
     else:
-        print("Invalid option. Please enter 'train' or 'predict'.")
+        print("Invalid option.")
