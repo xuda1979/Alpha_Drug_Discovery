@@ -60,5 +60,11 @@ def predict_structure(sequence, model):
     return prediction
 
 def encode_sequence(sequence):
-    # Implement encoding logic here, such as one-hot encoding for amino acids
-    pass
+    amino_acids = "ACDEFGHIKLMNPQRSTVWY"
+    encoding = torch.zeros(len(sequence), len(amino_acids))
+    aa_to_idx = {aa: i for i, aa in enumerate(amino_acids)}
+    for i, aa in enumerate(sequence):
+        idx = aa_to_idx.get(aa, None)
+        if idx is not None:
+            encoding[i, idx] = 1.0
+    return encoding.unsqueeze(0)

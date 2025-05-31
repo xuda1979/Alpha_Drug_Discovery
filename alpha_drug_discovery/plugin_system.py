@@ -29,6 +29,6 @@ def run_plugin(plugin):
         raise TypeError("plugin must be an instance of Plugin or its subclass.")
     plugin.execute()
 
-# Example usage
-plugin = CustomModule()
-run_plugin(plugin)
+if __name__ == "__main__":
+    plugin = CustomModule()
+    run_plugin(plugin)
