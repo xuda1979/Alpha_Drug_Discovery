@@ -9,6 +9,7 @@
 - **Deep docking** – simple 3D convolutional network for predicting docking scores.
 - **Biomarker discovery** – identify important features from omics data with random forests.
 - **Drug repurposing** – network propagation and reaction prediction utilities.
+- **Graph neural networks** – property prediction with a small GCN example.
 - **Basic visualisation utilities** for quick data exploration.
 
 ## Installation
@@ -33,6 +34,19 @@ X = torch.randn(100, 10)
 model = train_gan(X, epochs=10)
 ```
 
+Training the new graph neural network model requires node features and adjacency matrices for each molecule:
+
+```python
+from models.gnn_property_prediction import train_gcn
+import numpy as np
+
+# Example synthetic dataset with 3 molecules
+features = [np.random.rand(4, 3) for _ in range(3)]
+adjs = [np.eye(4) for _ in range(3)]
+labels = np.random.randint(0, 2, size=3)
+gnn_model = train_gcn(features, adjs, labels, epochs=2)
+```
+
 See the `run.py` script for a minimal command line entry point combining several components.
 
 ## Public Data Sources
@@ -42,6 +56,17 @@ The examples in this repository can be trained on freely available datasets such
 - [ChEMBL](https://www.ebi.ac.uk/chembl/)
 - [BindingDB](https://www.bindingdb.org)
 - [PDB](https://www.rcsb.org)
+
+### Downloading example datasets
+
+You can download the ESOL solubility dataset used in the GCN demo with:
+
+```python
+from data.dataset_download import download_esol_dataset
+
+esol_df = download_esol_dataset(use_sample=True)  # set to False for the full dataset
+```
+
 
 ## Contributing
 
