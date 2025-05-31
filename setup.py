@@ -7,7 +7,8 @@ setup(
     description="AI-driven drug discovery platform integrating multi-omics data.",
     long_description=open('README.md').read(),
     long_description_content_type="text/markdown",
-    url="https://github.com/yourusername/alpha_drug_discovery",
+    url='https://github.com/yourusername/alpha_drug_discovery',
+    license='MIT',
     packages=find_packages(),
     install_requires=[
         'numpy',
