@@ -13,6 +13,10 @@
 - **Basic visualisation utilities** for quick data exploration.
 - **ADMET prediction** – estimate absorption, distribution, metabolism, excretion
   and toxicity with a simple neural network.
+- **Plugin framework** – drop new algorithms into the `plugins/` folder.
+- **Command line interface** – run predefined tasks via `run.py`.
+- **End-to-end workflow** – sample pipeline combining generation and ADMET.
+- **Docker support** – build a container for easy deployment.
 
 ## Installation
 
@@ -64,6 +68,14 @@ For a step-by-step walkthrough including saving models and adjusting hyperparame
 [the detailed ADMET prediction guide](docs/admet_prediction_tutorial.md).
 
 See the `run.py` script for a minimal command line entry point combining several components.
+
+For an automated demonstration run:
+
+```bash
+python run.py pipeline
+```
+
+This executes the example workflow described in [docs/workflow_example.md](docs/workflow_example.md).
 
 ## Public Data Sources
 

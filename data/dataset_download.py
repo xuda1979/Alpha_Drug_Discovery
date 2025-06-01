@@ -1,13 +1,14 @@
 import os
 import pandas as pd
 import requests
+from typing import Literal
 
 ESOL_URL = "https://deepchemdata.s3-us-west-1.amazonaws.com/datasets/delaney-processed.csv"
 CHEMBL_ACTIVITY_URL = "https://www.ebi.ac.uk/chembl/api/data/activity.json"
 BINDINGDB_URL = "https://www.bindingdb.org/bind/resourcedownloads/BindingDB_All.tsv.zip"
 
 
-def download_esol_dataset(path="data/esol.csv", use_sample=False):
+def download_esol_dataset(path="data/esol.csv", use_sample: bool = False):
     """Download the ESOL solubility dataset if not present and return a DataFrame.
 
     Parameters
@@ -34,7 +35,7 @@ def download_esol_dataset(path="data/esol.csv", use_sample=False):
     return pd.read_csv(path)
 
 
-def download_chembl_activity_data(molecule_chembl_id, limit=100):
+def download_chembl_activity_data(molecule_chembl_id: str, limit: int = 100):
     """Download activity data for a molecule from the ChEMBL API.
 
     Parameters
@@ -57,7 +58,7 @@ def download_chembl_activity_data(molecule_chembl_id, limit=100):
     return pd.DataFrame(activities)
 
 
-def download_bindingdb_dataset(path="data/bindingdb_all.tsv", use_sample=False):
+def download_bindingdb_dataset(path="data/bindingdb_all.tsv", use_sample: bool = False):
     """Download the BindingDB dataset.
 
     Parameters
@@ -88,3 +89,16 @@ def download_bindingdb_dataset(path="data/bindingdb_all.tsv", use_sample=False):
     if use_sample:
         df = df.head(1000)
     return df
+
+
+def load_dataset(name: Literal["esol", "bindingdb"], cache_dir: str = "data", use_sample: bool = False) -> pd.DataFrame:
+    """Load one of the built-in datasets, downloading if necessary."""
+
+    os.makedirs(cache_dir, exist_ok=True)
+    if name == "esol":
+        path = os.path.join(cache_dir, "esol.csv")
+        return download_esol_dataset(path=path, use_sample=use_sample)
+    if name == "bindingdb":
+        path = os.path.join(cache_dir, "bindingdb_all.tsv")
+        return download_bindingdb_dataset(path=path, use_sample=use_sample)
+    raise ValueError(f"Unknown dataset: {name}")

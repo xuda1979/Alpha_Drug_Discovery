@@ -3,7 +3,14 @@
 from models import gan_drug_design, rl_drug_design, deep_docking
 from models import qm_mm_simulation, integrative_biomarker_discovery, ai_molecular_dynamics
 from alpha_drug_discovery import admet_prediction
-from repurposing import network_drug_repurposing, automated_synthesis, adversarial_toxicity, transfer_learning_toxicity
+from alpha_drug_discovery import workflows
+from repurposing import (
+    network_drug_repurposing,
+    automated_synthesis,
+    adversarial_toxicity,
+    transfer_learning_toxicity,
+)
+import argparse
 
 def run_gan_drug_design():
     X = ...  # Load or generate your input data
@@ -25,16 +32,26 @@ def run_admet_prediction():
 
 # Add similar functions for other new components...
 
-if __name__ == "__main__":
-    task = input("Enter a task: 'gan_design', 'rl_design', 'deep_docking', 'qm_mm', 'network_repurposing', 'synthesis', 'adversarial_toxicity', 'transfer_toxicity', 'integrative_biomarker', 'molecular_dynamics', 'admet_prediction': ")
-    if task == 'gan_design':
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Alpha Drug Discovery runner")
+    parser.add_argument("task", help="Task to run")
+    parser.add_argument("--config", default="config.yaml", help="Path to config file")
+    args = parser.parse_args()
+
+    task = args.task
+    if task == "gan_design":
         run_gan_drug_design()
-    elif task == 'rl_design':
+    elif task == "rl_design":
         run_rl_drug_design()
-    elif task == 'deep_docking':
+    elif task == "deep_docking":
         run_deep_docking()
-    elif task == 'admet_prediction':
+    elif task == "admet_prediction":
         run_admet_prediction()
-    # Add more task options as needed...
+    elif task == "pipeline":
+        workflows.basic_drug_discovery_pipeline(args.config)
     else:
         print("Invalid option.")
+
+
+if __name__ == "__main__":
+    main()
