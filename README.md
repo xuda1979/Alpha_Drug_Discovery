@@ -67,6 +67,15 @@ from data.dataset_download import download_esol_dataset
 esol_df = download_esol_dataset(use_sample=True)  # set to False for the full dataset
 ```
 
+Additional helpers allow fetching data directly from **ChEMBL** and **BindingDB**:
+
+```python
+from data.dataset_download import download_chembl_activity_data, download_bindingdb_dataset
+
+chembl_df = download_chembl_activity_data("CHEMBL25", limit=50)
+binding_db = download_bindingdb_dataset(use_sample=True)
+```
+
 
 ## Contributing
 
