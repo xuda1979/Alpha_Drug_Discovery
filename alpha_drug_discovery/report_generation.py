@@ -1,8 +1,9 @@
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import inch
+from typing import Iterable
 
-def create_report(filename, title, content, image_path=None):
+def create_report(filename: str, title: str, content: str | Iterable[str], image_path: str | None = None) -> None:
     """
     Generate a PDF report.
 
@@ -18,9 +19,16 @@ def create_report(filename, title, content, image_path=None):
     c = canvas.Canvas(filename, pagesize=letter)
     c.setFont("Helvetica", 20)
     c.drawString(100, 750, title)
-    
+
     c.setFont("Helvetica", 12)
-    c.drawString(100, 700, content)
+    if isinstance(content, str):
+        lines = [content]
+    else:
+        lines = list(content)
+    y = 700
+    for line in lines:
+        c.drawString(100, y, line)
+        y -= 20
     
     if image_path:
         c.drawImage(image_path, 100, 500, width=5*inch, height=3*inch)
