@@ -11,6 +11,8 @@
 - **Drug repurposing** – network propagation and reaction prediction utilities.
 - **Graph neural networks** – property prediction with a small GCN example.
 - **Basic visualisation utilities** for quick data exploration.
+- **ADMET prediction** – estimate absorption, distribution, metabolism, excretion
+  and toxicity with a simple neural network.
 
 ## Installation
 
@@ -46,6 +48,20 @@ adjs = [np.eye(4) for _ in range(3)]
 labels = np.random.randint(0, 2, size=3)
 gnn_model = train_gcn(features, adjs, labels, epochs=2)
 ```
+
+Predicting ADMET properties for a set of molecules is similarly straightforward:
+
+```python
+from alpha_drug_discovery.admet_prediction import train_admet_model
+import numpy as np
+
+X = np.random.rand(10, 8)
+y = np.random.rand(10, 5)
+admet_model = train_admet_model(X, y, epochs=2)
+```
+
+For a step-by-step walkthrough including saving models and adjusting hyperparameters, consult
+[the detailed ADMET prediction guide](docs/admet_prediction_tutorial.md).
 
 See the `run.py` script for a minimal command line entry point combining several components.
 
