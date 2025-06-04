@@ -28,6 +28,9 @@ pip install -r requirements.txt
 
 Some modules require additional scientific packages (e.g. PyTorch, RDKit).  If a dependency is missing the corresponding feature can be skipped.
 
+### Known Issues
+*   **RDKit/NumPy ABI Incompatibility**: The RDKit version available via pip (`rdkit-pypi==2022.9.5`) is compiled against NumPy 1.x. If you are using NumPy 2.x (which may be installed by other dependencies like TensorFlow via `tensorflow-cpu`), you might encounter `AttributeError: _ARRAY_API not found` or similar errors when RDKit is imported. This may affect workflows that directly use RDKit. The core individual model scripts and the basic pipeline have been tested to run despite these module-level import issues for RDKit-dependent modules not directly used by them. For full RDKit functionality with NumPy 2.x, a different RDKit installation (e.g., via Conda if available and compatible) might be necessary.
+
 ## Usage
 
 Each module can be executed individually.  Example usage for training the GAN model:
@@ -77,6 +80,40 @@ python run.py pipeline
 
 This executes the example workflow described in [docs/workflow_example.md](docs/workflow_example.md).
 
+### Running Predefined Tasks with `run.py`
+
+The `run.py` script provides a command-line interface to execute predefined tasks, including running models with downloaded datasets:
+
+*   **GAN-based Drug Design (ESOL dataset):**
+    This task trains a Generative Adversarial Network on the ESOL dataset (`data/esol.csv`) to generate new molecular structures.
+    ```bash
+    python run.py gan_design
+    ```
+
+*   **ADMET Prediction (ChEMBL Aspirin activity dataset):**
+    This task trains a model to predict ADMET properties using the sample ChEMBL activity data for Aspirin (`data/chembl_aspirin_activity.csv`).
+    ```bash
+    python run.py admet_prediction
+    ```
+
+*   **Reinforcement Learning Drug Design:**
+    This task trains a policy network in a dummy environment. It does not require pre-downloaded datasets.
+    ```bash
+    python run.py rl_design
+    ```
+
+*   **Deep Docking:**
+    This task trains a simple 3D CNN for docking score prediction using randomly generated data. It does not require pre-downloaded datasets.
+    ```bash
+    python run.py deep_docking
+    ```
+
+*   **Basic Pipeline:**
+    Runs a sequence of operations including loading the ESOL dataset, training a VAE, generating molecules, and training a dummy ADMET model.
+    ```bash
+    python run.py pipeline
+    ```
+
 ### Graphical user interface
 
 A small Dash application can launch the demo tasks from a browser.  Start it with:
@@ -98,23 +135,30 @@ The examples in this repository can be trained on freely available datasets such
 
 ### Downloading example datasets
 
-You can download the ESOL solubility dataset used in the GCN demo with:
+The project provides utilities to download datasets. A helper script is available to download some of them:
 
-```python
-from data.dataset_download import download_esol_dataset
-
-esol_df = download_esol_dataset(use_sample=True)  # set to False for the full dataset
+```bash
+python data/download_script.py
 ```
+This script will:
+- Download the full **ESOL solubility dataset** and save it to `data/esol.csv`. This dataset is used by `python run.py gan_design` and the `pipeline` task.
+- Download a sample of **ChEMBL activity data** (specifically for Aspirin, CHEMBL25) and save it to `data/chembl_aspirin_activity.csv`. This dataset is used by `python run.py admet_prediction`.
+- Attempt to download the **BindingDB dataset**. Note: At the time of writing, the public download links for the full BindingDB TSV (tab-separated values) dataset in ZIP format appear to be problematic (either pointing to non-existent files or serving intermediate HTML pages instead of direct ZIP files). Therefore, the `download_bindingdb_dataset` function might fail or result in an invalid file for the full dataset. The function is included for completeness should the links be restored or a working direct link be identified and updated in `data/dataset_download.py`.
 
-Additional helpers allow fetching data directly from **ChEMBL** and **BindingDB**:
+You can also use the individual download functions from `data.dataset_download` in your own scripts:
 
-```python
-from data.dataset_download import download_chembl_activity_data, download_bindingdb_dataset
+- To load the ESOL dataset (will download if `data/esol.csv` is not present):
+  ```python
+  from data.dataset_download import download_esol_dataset
+  esol_df = download_esol_dataset(path="data/esol.csv", use_sample=False)
+  ```
 
-chembl_df = download_chembl_activity_data("CHEMBL25", limit=50)
-binding_db = download_bindingdb_dataset(use_sample=True)
-```
-
+- To fetch specific ChEMBL activity data:
+  ```python
+  from data.dataset_download import download_chembl_activity_data
+  # Example: Fetch data for a specific ChEMBL ID
+  activity_df = download_chembl_activity_data(molecule_chembl_id="CHEMBL123", limit=100)
+  ```
 
 ## Contributing
 

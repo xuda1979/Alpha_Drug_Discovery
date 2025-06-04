@@ -5,7 +5,7 @@ from typing import Literal
 
 ESOL_URL = "https://deepchemdata.s3-us-west-1.amazonaws.com/datasets/delaney-processed.csv"
 CHEMBL_ACTIVITY_URL = "https://www.ebi.ac.uk/chembl/api/data/activity.json"
-BINDINGDB_URL = "https://www.bindingdb.org/bind/resourcedownloads/BindingDB_All.tsv.zip"
+BINDINGDB_URL = "https://www.bindingdb.org/rwd/bind/chemsearch/marvin/SDFdownload.jsp?download_file=/bind/downloads/BindingDB_ChEMBL_202506.tsv.zip"
 
 
 def download_esol_dataset(path="data/esol.csv", use_sample: bool = False):
