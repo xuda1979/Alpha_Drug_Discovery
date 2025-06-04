@@ -77,6 +77,17 @@ python run.py pipeline
 
 This executes the example workflow described in [docs/workflow_example.md](docs/workflow_example.md).
 
+### Graphical user interface
+
+A small Dash application can launch the demo tasks from a browser.  Start it with:
+
+```bash
+python -m gui.app
+```
+
+Select a dataset, choose the number of epochs and click the buttons to run the
+GAN example, the reinforcement learning demo or the basic pipeline.
+
 ## Public Data Sources
 
 The examples in this repository can be trained on freely available datasets such as:
