@@ -46,8 +46,19 @@ def basic_drug_discovery_pipeline(config_path: str = "config.yaml") -> None:
         pass
 
     print("Loading dataset ...")
-    df = dataset_download.load_dataset("esol", use_sample=True)
-    X = df.select_dtypes(float).values
+    df = dataset_download.load_dataset("esol", use_sample=False, cache_dir="data")
+    X = df.select_dtypes(include=[np.number]).values # Ensure we select all numeric types
+
+    if X.shape[0] > 0 and X.shape[1] > 0: # Ensure X is not empty and has features
+        x_min = X.min(axis=0)
+        x_max = X.max(axis=0)
+        # Add epsilon to prevent division by zero if a column has all same values
+        X = (X - x_min) / (x_max - x_min + 1e-8)
+        X = np.nan_to_num(X, nan=0.0) # Handle potential NaNs if x_max - x_min was 0 for a feature
+    else:
+        # Handle case where X might be empty after select_dtypes or if esol.csv was empty/no numeric
+        print("Warning: ESOL dataset has no numeric data or is empty. VAE training will use random data.")
+        X = np.random.rand(100, 10).astype(np.float32) # Fallback to random data, already in [0,1]
 
     latent_dim = cfg.get("latent_dim", 8)
     epochs = cfg.get("vae_epochs", 2)
