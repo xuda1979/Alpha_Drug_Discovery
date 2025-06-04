@@ -1,8 +1,14 @@
 # __init__.py
 
-from .gan_drug_design import train_gan
-from .rl_drug_design import train_policy_gradient
-from .deep_docking import train_docking_model
-from .gnn_property_prediction import train_gcn
+"""Model submodules for Alpha Drug Discovery.
 
-__all__ = ['train_gan', 'train_policy_gradient', 'train_docking_model', 'train_gcn']
+This package avoids importing heavy dependencies (e.g. PyTorch) at import time.
+Individual modules should be imported lazily by consumers when needed.
+"""
+
+__all__ = [
+    'gan_drug_design',
+    'rl_drug_design',
+    'deep_docking',
+    'gnn_property_prediction',
+]
