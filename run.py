@@ -49,6 +49,8 @@ def main() -> None:
         run_admet_prediction()
     elif task == "pipeline":
         workflows.basic_drug_discovery_pipeline(args.config)
+    elif task == "full_demo":
+        workflows.full_feature_pipeline(args.config)
     else:
         print("Invalid option.")
 
