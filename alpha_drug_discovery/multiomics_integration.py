@@ -3,6 +3,7 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from torch.utils.data import DataLoader, TensorDataset
 
 class MultiModalNet(nn.Module):
     def __init__(self, input_dims, output_dim):

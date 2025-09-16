@@ -3,32 +3,85 @@
 from __future__ import annotations
 
 import numpy as np
+import pandas as pd
+
+try:  # pragma: no cover - optional networkx dependency
+    import networkx as nx
+except ImportError as exc:  # pragma: no cover - executed when networkx missing
+    nx = None  # type: ignore[assignment]
+    _NETWORKX_IMPORT_ERROR = exc
+else:
+    _NETWORKX_IMPORT_ERROR = None
 
 from data import dataset_download
-from alpha_drug_discovery import (
-    generative_model,
-    admet_prediction,
-    biomarker_discovery,
-    drug_repurposing,
-    predictive_toxicology,
-    plugin_system,
-    report_generation,
-)
-from models import (
-    gan_drug_design,
-    rl_drug_design,
-    deep_docking,
-    gnn_property_prediction,
-    ai_molecular_dynamics,
-    qm_mm_simulation,
-    protein_structure_prediction,
-    integrative_biomarker_discovery,
-)
-from repurposing import automated_synthesis, network_drug_repurposing
-from utils import config as config_utils
-import pandas as pd
-import networkx as nx
-import torch
+try:  # pragma: no cover - biomarker module depends on optional sklearn
+    from alpha_drug_discovery import biomarker_discovery
+except ImportError as exc:  # pragma: no cover - executed when sklearn missing
+    biomarker_discovery = None  # type: ignore[assignment]
+    _BIOMARKER_IMPORT_ERROR = exc
+else:
+    _BIOMARKER_IMPORT_ERROR = None
+
+try:  # pragma: no cover - optional sklearn dependency
+    from alpha_drug_discovery import drug_repurposing
+except ImportError as exc:  # pragma: no cover - executed when sklearn missing
+    drug_repurposing = None  # type: ignore[assignment]
+    _DRUG_REPURPOSING_IMPORT_ERROR = exc
+else:
+    _DRUG_REPURPOSING_IMPORT_ERROR = None
+
+from alpha_drug_discovery import plugin_system
+
+try:  # pragma: no cover - report generation depends on reportlab
+    from alpha_drug_discovery import report_generation
+except ImportError as exc:  # pragma: no cover - executed when reportlab missing
+    report_generation = None  # type: ignore[assignment]
+    _REPORT_IMPORT_ERROR = exc
+else:
+    _REPORT_IMPORT_ERROR = None
+try:  # pragma: no cover - RDKit optional dependency
+    from repurposing import automated_synthesis, network_drug_repurposing
+except ImportError as exc:  # pragma: no cover - executed when RDKit missing
+    automated_synthesis = None  # type: ignore[assignment]
+    network_drug_repurposing = None  # type: ignore[assignment]
+    _REPURPOSING_IMPORT_ERROR = exc
+else:
+    _REPURPOSING_IMPORT_ERROR = None
+
+try:  # pragma: no cover - yaml optional dependency
+    from utils import config as config_utils
+except ImportError as exc:  # pragma: no cover - executed when PyYAML missing
+    config_utils = None  # type: ignore[assignment]
+    _CONFIG_IMPORT_ERROR = exc
+else:
+    _CONFIG_IMPORT_ERROR = None
+
+try:  # pragma: no cover - optional dependency guard
+    import torch  # noqa: F401  # Imported for type consistency in optional modules
+except ImportError:  # pragma: no cover - executed when torch missing
+    torch = None  # type: ignore[assignment]
+
+try:  # pragma: no cover - optional dependency guard
+    from alpha_drug_discovery import admet_prediction, generative_model, predictive_toxicology
+    from models import (
+        gan_drug_design,
+        rl_drug_design,
+        deep_docking,
+        gnn_property_prediction,
+        ai_molecular_dynamics,
+        qm_mm_simulation,
+        protein_structure_prediction,
+        integrative_biomarker_discovery,
+    )
+except ImportError as exc:  # pragma: no cover - executed when torch missing
+    _DL_IMPORT_ERROR = exc
+    _TORCH_PIPELINE_AVAILABLE = False
+    admet_prediction = generative_model = predictive_toxicology = None  # type: ignore[assignment]
+    gan_drug_design = rl_drug_design = deep_docking = gnn_property_prediction = None  # type: ignore[assignment]
+    ai_molecular_dynamics = qm_mm_simulation = protein_structure_prediction = integrative_biomarker_discovery = None  # type: ignore[assignment]
+else:
+    _DL_IMPORT_ERROR = None
+    _TORCH_PIPELINE_AVAILABLE = True
 
 
 def basic_drug_discovery_pipeline(config_path: str = "config.yaml") -> None:
@@ -39,11 +92,23 @@ def basic_drug_discovery_pipeline(config_path: str = "config.yaml") -> None:
     config_path : str, optional
         Path to a YAML configuration file describing hyper-parameters.
     """
+    if not _TORCH_PIPELINE_AVAILABLE:
+        print("Deep learning dependencies are unavailable; skipping pipeline execution.")
+        if _DL_IMPORT_ERROR is not None:
+            print(f"Reason: {_DL_IMPORT_ERROR}")
+        return
     cfg = {}
-    try:
-        cfg = config_utils.load_config(config_path)
-    except FileNotFoundError:
-        pass
+    if config_utils is not None:
+        try:
+            cfg = config_utils.load_config(config_path)
+        except FileNotFoundError:
+            pass
+        except Exception as exc:
+            print(f"Warning: failed to load config: {exc}")
+    else:
+        print("Skipping config loading due to missing dependency.")
+        if _CONFIG_IMPORT_ERROR is not None:
+            print(f"Reason: {_CONFIG_IMPORT_ERROR}")
 
     print("Loading dataset ...")
     df = dataset_download.load_dataset("esol", use_sample=True)
@@ -65,17 +130,34 @@ def basic_drug_discovery_pipeline(config_path: str = "config.yaml") -> None:
         "Generated molecules: " + str(molecules.shape),
         "VAE latent_dim: " + str(latent_dim),
     ]
-    report_generation.create_report("pipeline_report.pdf", "Pipeline Summary", report_lines)
+    if report_generation is not None:
+        report_generation.create_report("pipeline_report.pdf", "Pipeline Summary", report_lines)
+    else:
+        print("Skipping report generation due to missing dependency.")
+        if _REPORT_IMPORT_ERROR is not None:
+            print(f"Reason: {_REPORT_IMPORT_ERROR}")
     print("Pipeline complete.")
 
 
 def full_feature_pipeline(config_path: str = "config.yaml") -> None:
     """Demonstrate all major modules using synthetic data."""
+    if not _TORCH_PIPELINE_AVAILABLE:
+        print("Deep learning dependencies are unavailable; skipping full feature demo.")
+        if _DL_IMPORT_ERROR is not None:
+            print(f"Reason: {_DL_IMPORT_ERROR}")
+        return
     cfg = {}
-    try:
-        cfg = config_utils.load_config(config_path)
-    except FileNotFoundError:
-        pass
+    if config_utils is not None:
+        try:
+            cfg = config_utils.load_config(config_path)
+        except FileNotFoundError:
+            pass
+        except Exception as exc:
+            print(f"Warning: failed to load config: {exc}")
+    else:
+        print("Skipping config loading due to missing dependency.")
+        if _CONFIG_IMPORT_ERROR is not None:
+            print(f"Reason: {_CONFIG_IMPORT_ERROR}")
 
     # Load sample dataset
     df = dataset_download.load_dataset("esol", use_sample=True)
@@ -111,18 +193,39 @@ def full_feature_pipeline(config_path: str = "config.yaml") -> None:
     deep_docking.train_docking_model(X_dock, y_dock, epochs=1)
 
     # 4) Biomarker discovery
-    biom_X = pd.DataFrame(np.random.rand(20, 5), columns=[f"f{i}" for i in range(5)])
-    biom_y = pd.Series(np.random.randint(0, 2, size=20))
-    biomarkers = biomarker_discovery.discover_biomarkers(biom_X, biom_y, n_top_features=2)
+    if biomarker_discovery is not None:
+        biom_X = pd.DataFrame(np.random.rand(20, 5), columns=[f"f{i}" for i in range(5)])
+        biom_y = pd.Series(np.random.randint(0, 2, size=20))
+        biomarkers = biomarker_discovery.discover_biomarkers(biom_X, biom_y, n_top_features=2)
+    else:
+        biomarkers = []
+        print("Skipping biomarker discovery step due to missing dependency.")
+        if _BIOMARKER_IMPORT_ERROR is not None:
+            print(f"Reason: {_BIOMARKER_IMPORT_ERROR}")
 
     # 5) Drug repurposing networks
-    drug_feats = np.random.rand(3, 4)
-    target_feats = np.random.rand(5, 4)
-    G = drug_repurposing.build_drug_target_network(drug_feats, target_feats)
-    repurpose = drug_repurposing.identify_repurposing_opportunities(G, "drug_0")
-
-    simple_graph = nx.path_graph(5)
-    network_drug_repurposing.propagate_network(simple_graph, 0, steps=2)
+    if drug_repurposing is not None:
+        drug_feats = np.random.rand(3, 4)
+        target_feats = np.random.rand(5, 4)
+        G = drug_repurposing.build_drug_target_network(drug_feats, target_feats)
+        repurpose = drug_repurposing.identify_repurposing_opportunities(G, "drug_0")
+        if network_drug_repurposing is not None and nx is not None:
+            simple_graph = nx.path_graph(5)
+            network_drug_repurposing.propagate_network(simple_graph, 0, steps=2)
+        else:
+            print("Skipping network propagation due to missing dependency.")
+            reasons = []
+            if _REPURPOSING_IMPORT_ERROR is not None:
+                reasons.append(str(_REPURPOSING_IMPORT_ERROR))
+            if nx is None and _NETWORKX_IMPORT_ERROR is not None:
+                reasons.append(str(_NETWORKX_IMPORT_ERROR))
+            if reasons:
+                print("Reason: " + "; ".join(reasons))
+    else:
+        repurpose = []
+        print("Skipping drug repurposing step due to missing dependency.")
+        if _DRUG_REPURPOSING_IMPORT_ERROR is not None:
+            print(f"Reason: {_DRUG_REPURPOSING_IMPORT_ERROR}")
 
     # 6) ADMET and toxicity prediction
     y_admet = np.random.rand(len(X), 5)
@@ -133,7 +236,13 @@ def full_feature_pipeline(config_path: str = "config.yaml") -> None:
     predictive_toxicology.train_toxicity_model(X_tox, y_tox, epochs=1)
 
     # 7) Automated synthesis example
-    products = automated_synthesis.predict_reaction_outcome("CCO.O")
+    if automated_synthesis is not None:
+        products = automated_synthesis.predict_reaction_outcome("CCO.O")
+    else:
+        products = None
+        print("Skipping automated synthesis due to missing dependency.")
+        if _REPURPOSING_IMPORT_ERROR is not None:
+            print(f"Reason: {_REPURPOSING_IMPORT_ERROR}")
 
     # 8) Plugin execution
     for plugin in plugin_system.discover_plugins():
@@ -172,5 +281,10 @@ def full_feature_pipeline(config_path: str = "config.yaml") -> None:
         f"Repurposing: {repurpose}",
         f"Synth products: {products}",
     ]
-    report_generation.create_report("full_demo_report.pdf", "Full Feature Pipeline", report_lines)
+    if report_generation is not None:
+        report_generation.create_report("full_demo_report.pdf", "Full Feature Pipeline", report_lines)
+    else:
+        print("Skipping report generation due to missing dependency.")
+        if _REPORT_IMPORT_ERROR is not None:
+            print(f"Reason: {_REPORT_IMPORT_ERROR}")
     print("Full feature pipeline complete.")

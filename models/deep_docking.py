@@ -32,7 +32,7 @@ def train_docking_model(X, y, epochs=5, lr=0.001, batch_size=8):
         for batch_x, batch_y in dataloader:
             optimizer.zero_grad()
             outputs = model(batch_x)
-            loss = criterion(outputs.squeeze(), batch_y)
+            loss = criterion(outputs.view(-1), batch_y.float().view(-1))
             loss.backward()
             optimizer.step()
             epoch_loss += loss.item()

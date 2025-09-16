@@ -41,7 +41,7 @@ def train_integrative_biomarker_model(X_genomics, X_proteomics, X_metabolomics, 
         for batch_genomics, batch_proteomics, batch_metabolomics, batch_y in dataloader:
             optimizer.zero_grad()
             outputs = model(batch_genomics, batch_proteomics, batch_metabolomics)
-            loss = criterion(outputs.squeeze(), batch_y)
+            loss = criterion(outputs.view(-1), batch_y.float().view(-1))
             loss.backward()
             optimizer.step()
             epoch_loss += loss.item()

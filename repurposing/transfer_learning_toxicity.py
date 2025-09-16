@@ -29,7 +29,7 @@ def fine_tune_toxicity_model(X, y, pretrained_model_path, epochs=100, batch_size
         for batch_X, batch_y in dataloader:
             optimizer.zero_grad()
             outputs = model(batch_X)
-            loss = criterion(outputs.squeeze(), batch_y)
+            loss = criterion(outputs.view(-1), batch_y.float().view(-1))
             loss.backward()
             optimizer.step()
             epoch_loss += loss.item()
