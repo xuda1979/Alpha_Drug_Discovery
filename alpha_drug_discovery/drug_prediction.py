@@ -44,7 +44,7 @@ def train_drug_target_model(X, y, epochs=10, learning_rate=0.001, batch_size=32,
         for batch_X, batch_y in dataloader:
             optimizer.zero_grad()
             outputs = model(batch_X)
-            loss = criterion(outputs.squeeze(), batch_y)
+            loss = criterion(outputs.view(-1), batch_y.float().view(-1))
             loss.backward()
             optimizer.step()
             epoch_loss += loss.item()

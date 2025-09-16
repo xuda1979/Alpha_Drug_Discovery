@@ -3,6 +3,7 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from torch.utils.data import DataLoader, TensorDataset
 
 class Generator(nn.Module):
     def __init__(self, latent_dim, output_dim):
@@ -35,6 +36,9 @@ class Discriminator(nn.Module):
         return x
 
 def train_gan(X, latent_dim=100, epochs=1000, batch_size=64, lr=0.0002):
+    if len(X) == 0:
+        raise ValueError("Input dataset X must contain at least one sample")
+
     generator = Generator(latent_dim, X.shape[1])
     discriminator = Discriminator(X.shape[1])
 
@@ -42,32 +46,46 @@ def train_gan(X, latent_dim=100, epochs=1000, batch_size=64, lr=0.0002):
     optimizer_g = optim.Adam(generator.parameters(), lr=lr)
     optimizer_d = optim.Adam(discriminator.parameters(), lr=lr)
 
-    real_labels = torch.ones(batch_size, 1)
-    fake_labels = torch.zeros(batch_size, 1)
+    dataset = TensorDataset(torch.tensor(X, dtype=torch.float32))
+    dataloader = DataLoader(dataset, batch_size=min(batch_size, len(dataset)), shuffle=True)
 
     for epoch in range(epochs):
-        # Train Discriminator
-        discriminator.zero_grad()
-        real_data = torch.tensor(X, dtype=torch.float32)[:batch_size]
-        output_real = discriminator(real_data)
-        loss_real = criterion(output_real, real_labels)
-        loss_real.backward()
+        epoch_loss_d = 0.0
+        epoch_loss_g = 0.0
 
-        noise = torch.randn(batch_size, latent_dim)
-        fake_data = generator(noise)
-        output_fake = discriminator(fake_data.detach())
-        loss_fake = criterion(output_fake, fake_labels)
-        loss_fake.backward()
-        optimizer_d.step()
+        for (real_data,) in dataloader:
+            current_batch_size = real_data.size(0)
 
-        # Train Generator
-        generator.zero_grad()
-        output_fake = discriminator(fake_data)
-        loss_g = criterion(output_fake, real_labels)
-        loss_g.backward()
-        optimizer_g.step()
+            # Train Discriminator
+            optimizer_d.zero_grad()
+            real_labels = torch.ones(current_batch_size, 1, dtype=real_data.dtype)
+            fake_labels = torch.zeros(current_batch_size, 1, dtype=real_data.dtype)
+
+            output_real = discriminator(real_data)
+            loss_real = criterion(output_real, real_labels)
+
+            noise = torch.randn(current_batch_size, latent_dim)
+            fake_data = generator(noise)
+            output_fake = discriminator(fake_data.detach())
+            loss_fake = criterion(output_fake, fake_labels)
+
+            loss_d = loss_real + loss_fake
+            loss_d.backward()
+            optimizer_d.step()
+
+            # Train Generator
+            optimizer_g.zero_grad()
+            output_fake = discriminator(fake_data)
+            loss_g = criterion(output_fake, real_labels)
+            loss_g.backward()
+            optimizer_g.step()
+
+            epoch_loss_d += loss_d.item()
+            epoch_loss_g += loss_g.item()
 
         if epoch % 100 == 0:
-            print(f'Epoch [{epoch}/{epochs}] - Loss D: {loss_real + loss_fake}, Loss G: {loss_g}')
+            mean_loss_d = epoch_loss_d / len(dataloader)
+            mean_loss_g = epoch_loss_g / len(dataloader)
+            print(f'Epoch [{epoch}/{epochs}] - Loss D: {mean_loss_d:.4f}, Loss G: {mean_loss_g:.4f}')
 
     return generator

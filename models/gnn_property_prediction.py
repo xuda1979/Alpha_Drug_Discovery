@@ -2,6 +2,7 @@
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 
@@ -14,9 +15,22 @@ class GCNLayer(nn.Module):
         self.linear = nn.Linear(in_features, out_features)
 
     def forward(self, x: torch.Tensor, adj: torch.Tensor) -> torch.Tensor:
-        out = torch.matmul(adj, x)
-        out = self.linear(out)
-        return torch.relu(out)
+        """Apply a single GCN layer with symmetric adjacency normalisation."""
+
+        if adj.dim() != 2:
+            raise ValueError("Adjacency matrix must be 2-dimensional")
+
+        # Add self-loops before computing the degree matrix.
+        device = x.device
+        adj_with_self_loops = adj + torch.eye(adj.size(0), device=device, dtype=adj.dtype)
+        degree = adj_with_self_loops.sum(dim=1)
+        deg_inv_sqrt = degree.pow(-0.5)
+        deg_inv_sqrt[torch.isinf(deg_inv_sqrt)] = 0.0
+        norm_adj = deg_inv_sqrt.unsqueeze(1) * adj_with_self_loops * deg_inv_sqrt.unsqueeze(0)
+
+        support = self.linear(x)
+        out = torch.matmul(norm_adj, support)
+        return F.relu(out)
 
 
 class GCN(nn.Module):
@@ -30,8 +44,8 @@ class GCN(nn.Module):
     def forward(self, x: torch.Tensor, adj: torch.Tensor) -> torch.Tensor:
         h = self.conv1(x, adj)
         h = self.conv2(h, adj)
-        # Global mean pooling
-        return torch.sigmoid(h.mean())
+        # Global mean pooling retaining batch dimension
+        return torch.sigmoid(h.mean(dim=0))
 
 
 class GraphDataset(Dataset):
@@ -62,8 +76,10 @@ def train_gcn(features, adjs, labels, epochs: int = 5, lr: float = 0.01) -> GCN:
         epoch_loss = 0.0
         for x, adj, label in dataloader:
             optimizer.zero_grad()
-            output = model(x.squeeze(0), adj.squeeze(0))
-            loss = criterion(output.squeeze(), label)
+            graph_x = x.squeeze(0)
+            graph_adj = adj.squeeze(0)
+            output = model(graph_x, graph_adj)
+            loss = criterion(output.view(1), label.float().view(1))
             loss.backward()
             optimizer.step()
             epoch_loss += loss.item()
